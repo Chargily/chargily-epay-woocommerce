@@ -132,8 +132,7 @@ function chargily_edahabia_init_gateway_class() {
                     'type'        => 'select',
                     'options'     => array(
                         'completed'  => 'completed',
-                        'on-hold' => 'on hold',
-                        'processing' => 'processing'
+                        'on-hold' => 'on hold'
                     ),
                     'description' => 'This Status you will get if payment Succeed.',
                 )
@@ -166,19 +165,20 @@ function chargily_edahabia_init_gateway_class() {
             $current_user = wp_get_current_user();
             $environment_url = 'http://epay.chargily.com.dz/api/invoice';
 
-            if (isset($order_id)
+            if (isset($current_user->user_login)
+                && isset($order_id)
                 && isset($customer_order->order_total)
                 && isset($this->discount)
                 && isset($this->back_url)) {
                 $payload = array(
-                    "client" =>  WC()->customer->get_billing_first_name(),
+                    "client" => $current_user->user_login,
                     "amount" => $customer_order->order_total,
                     "invoice_number" => $order_id,
                     'discount' => $this->discount,
+//                'mode' => WC()->checkout->get_value('billing_payment_method'),
                     'mode' => 'EDAHABIA',
                     'comment' => 'Recouverement de facture.',
                     'back_url' => $this->back_url,
-                    'client_email' =>  WC()->customer->billing_email,
                     'webhook_url' => home_url() . '/wc-api/chargily'
                 );
 
@@ -193,10 +193,8 @@ function chargily_edahabia_init_gateway_class() {
                 ));
             }
             else{
-                throw new Exception(__('There is missing information in payment parameters.'
-                    . (isset($this->discount)? '' : ' \n Discount must be set.')
-                    . (isset($this->back_url)? '' : ' \n Return url must be set.')
-                    , 'chargily'));
+                $response = '';
+                throw new Exception(__('There is missing information in payment parameters. please inform the provider. Sorry for the inconvenience.', 'chargily'));
             }
 
             if (is_wp_error($response))
